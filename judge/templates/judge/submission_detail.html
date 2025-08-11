@@ -1,0 +1,29 @@
+{% extends 'judge/base.html' %}
+
+{% block title %}Submission {{ submission.id }} – Online Judge{% endblock %}
+
+{% block content %}
+<h2>Submission #{{ submission.id }}</h2>
+<p><strong>Problem:</strong> {{ submission.problem.title }}</p>
+<p><strong>Submitted at:</strong> {{ submission.created_at }}</p>
+<p><strong>Status:</strong> 
+    {% if submission.passed %}
+        <span class="passed">Passed</span>
+    {% elif submission.passed is not None %}
+        <span class="failed">Failed</span>
+    {% else %}
+        <span class="pending">Pending</span>
+    {% endif %}
+</p>
+
+{% if submission.output %}
+<h3>Outputs</h3>
+<pre>{{ submission.output }}</pre>
+{% endif %}
+{% if submission.error %}
+<h3>Errors</h3>
+<pre>{{ submission.error }}</pre>
+{% endif %}
+
+<p><a href="{% url 'problem_detail' submission.problem.id %}">Try again</a></p>
+{% endblock %}

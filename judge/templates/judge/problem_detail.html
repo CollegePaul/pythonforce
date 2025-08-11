@@ -1,0 +1,61 @@
+{% extends 'judge/base.html' %}
+
+{% block title %}{{ problem.title }} – Online Judge{% endblock %}
+
+{% block extra_head %}
+    {{ block.super }}
+    <!-- Load CodeMirror assets from a CDN. In a production system you may want to
+         host these files yourself or bundle them with your static files. -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/eclipse.min.css">
+    <style>
+        .CodeMirror {
+            border: 1px solid #ccc;
+            font-size: 14px;
+            height: auto;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<h2>{{ problem.title }}</h2>
+<p>{{ problem.description|linebreaks }}</p>
+<h3>Submit Your Solution</h3>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Submit</button>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+    {{ block.super }}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
+    <script>
+    (function() {
+        var textarea = document.getElementById('id_code');
+        if (textarea) {
+            var editor = CodeMirror.fromTextArea(textarea, {
+                lineNumbers: true,
+                indentUnit: 4,
+                tabSize: 4,
+                mode: 'python',
+                theme: 'eclipse'
+            });
+            // Keep underlying <textarea> in sync so HTML5 validation works
+            // and the form can be submitted successfully.
+            editor.on('change', function () {
+                editor.save();
+            });
+
+            var form = textarea.form || document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function () {
+                    editor.save();
+                });
+            }
+        }
+    })();
+    </script>
+{% endblock %}
