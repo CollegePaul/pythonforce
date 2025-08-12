@@ -1,29 +1,39 @@
 {% extends 'judge/base.html' %}
-
 {% block title %}Submission {{ submission.id }} – Online Judge{% endblock %}
-
 {% block content %}
+
 <h2>Submission #{{ submission.id }}</h2>
 <p><strong>Problem:</strong> {{ submission.problem.title }}</p>
-<p><strong>Submitted at:</strong> {{ submission.created_at }}</p>
-<p><strong>Status:</strong> 
-    {% if submission.passed %}
-        <span class="passed">Passed</span>
-    {% elif submission.passed is not None %}
-        <span class="failed">Failed</span>
-    {% else %}
-        <span class="pending">Pending</span>
-    {% endif %}
+<p><strong>Submitted by:</strong> {{ submission.user|default:"(anonymous)" }}</p>
+<p><strong>Status:</strong>
+  {% if submission.passed %}
+    <span style="color:green;">✓ All tests passed</span>
+  {% else %}
+    <span style="color:#a00;">✗ Some tests failed</span>
+  {% endif %}
 </p>
 
-{% if submission.output %}
-<h3>Outputs</h3>
-<pre>{{ submission.output }}</pre>
-{% endif %}
-{% if submission.error %}
-<h3>Errors</h3>
-<pre>{{ submission.error }}</pre>
-{% endif %}
+<h3>Per-test results</h3>
+<ul style="list-style:none;padding-left:0;">
+  {% for r in submission.per_test_results %}
+    <li style="margin:.4rem 0;">
+      {% if r.passed %}
+        <span style="color:green;">✓</span>
+      {% else %}
+        <span style="color:#a00;">✗</span>
+      {% endif %}
+      <strong>Test {{ r.index }}</strong>
+      — expected: <code>{{ r.expected }}</code>,
+      got: <code>{{ r.actual }}</code>
+      {% if r.stderr %}<em style="color:#666;"> (stderr: {{ r.stderr }})</em>{% endif %}
+    </li>
+  {% empty %}
+    <li>No test results recorded.</li>
+  {% endfor %}
+</ul>
 
-<p><a href="{% url 'problem_detail' submission.problem.id %}">Try again</a></p>
+<p><strong>Raw combined output:</strong></p>
+<pre>{{ submission.output }}</pre>
+
+<p><a href="{% url 'problem_detail' submission.problem.id %}">Back to problem</a></p>
 {% endblock %}

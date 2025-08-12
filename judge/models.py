@@ -8,6 +8,7 @@ passed all test cases, and any output produced during evaluation.
 """
 
 from __future__ import annotations
+from django.conf import settings
 
 from django.db import models  # type: ignore
 
@@ -53,7 +54,13 @@ class Submission(models.Model):
     defaults to ``None`` so that new submissions can be distinguished
     from evaluated ones.
     """
-
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='submissions',
+        null=True, blank=True,  # keep nullable for existing rows; can enforce later
+    )
+    per_test_results = models.JSONField(default=list, blank=True) 
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE, related_name='submissions')
     code = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -64,3 +71,26 @@ class Submission(models.Model):
     def __str__(self) -> str:
         status = 'passed' if self.passed else 'failed' if self.passed is not None else 'pending'
         return f'Submission #{self.pk} for {self.problem.title} ({status})'
+    
+
+# models.py
+class Solution(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
+    submission = models.OneToOneField(Submission, on_delete=models.CASCADE, related_name='solution')
+    code = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'problem')  # keep best/latest one per problem
+
+class UserProblemStat(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
+    attempts = models.PositiveIntegerField(default=0)
+    passed = models.BooleanField(default=False)
+    first_accepted_at = models.DateTimeField(null=True, blank=True)
+    last_submission_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ('user', 'problem')
